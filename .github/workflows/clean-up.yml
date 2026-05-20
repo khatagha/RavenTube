@@ -1,0 +1,43 @@
+name: Clean Up Downloaded Files
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clean:
+    name: Remove all downloads and search results
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Delete downloaded content and generated files
+        run: |
+          # Videos folder (all downloaded videos + README.md)
+          rm -rf videos/
+
+          # Search result files
+          rm -f index.html raw.json search_results.html selected_urls.txt urls.txt
+
+          # RavenTube cache folder
+          rm -rf .raventube/
+
+          echo "All downloaded and generated files have been removed."
+
+      - name: Commit and push the cleanup
+        run: |
+          git config user.name  "RavenTube Cleaner"
+          git config user.email "cleaner@raventube"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit – repository already clean."
+          else
+            git commit -m "Clean up downloaded files [skip ci]"
+            git push
+          fi
